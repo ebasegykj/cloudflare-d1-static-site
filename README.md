@@ -81,6 +81,12 @@ git clone https://github.com/<你的用户名>/<你的仓库名>.git
 cd <你的仓库名>
 ```
 
+> **零部署先看效果**：clone（或 Download ZIP 解压）后直接**双击 `index.html`**，
+> 浏览器里就能看到完整站点——demo 文章、瞬间、待办都在，数据加载全部走本地文件，
+> 不需要任何服务器。局限：在线后台的写入功能和「每日一句」外链在本地不可用，
+> 想发文还得走第 3）步部署。（后台 `admin.html` 也能本地打开看界面，但设置会与
+> 其他本地页面共享浏览器存储，见下方「管理后台默认密码」一节。）
+
 **3）Cloudflare Pages 连仓库**
 
 CF 控制台 → **Workers & Pages** → **Create** → **Pages** → **Connect to Git** → 选仓库：
@@ -107,6 +113,27 @@ GitHub → Settings → Developer settings → **Fine-grained tokens** → Conte
 
 细节、每一步的验收标准、以及 Tier1/Tier2 的完整步骤：
 👉 [`docs/SETUP.md`](docs/SETUP.md)
+
+---
+
+## 在线示例
+
+**https://www.hehyc.com** —— 本模板的真实部署（内容为演示数据）。
+你也可以 fork / Use this template 后两分钟部署出自己的同名站点，步骤就是上面的「快速开始」。
+
+---
+
+## 管理后台默认密码
+
+- **本模板没有账号概念，只有一个访问口令**：默认 `admin123`（定义在
+  `data/admin-lock.js` 的 `pass` 字段）。它只是「挡住随手点进来的人」的前端门锁，
+  明文随仓库公开——**这不是安全边界**，真正的安全靠 GitHub Token 权限（改不了内容）。
+- **改密码**：编辑 `data/admin-lock.js` → 改 `pass: '你的新口令'` → 提交推送即可，
+  前台与后台无需其他改动。上线后第一件事就建议改掉它。
+- **GitHub 设置页（后台 → 设置）**：模板默认值为空、占位符是 `your-username` /
+  `your-repo`，填你自己刚建的仓库和 Token。注意这些值保存在**浏览器 localStorage**：
+  如果你用 `file://` 方式本地打开 `admin.html`，浏览器会在所有本地页面间共享这份
+  存储，可能显示你其他站点存过的配置——换台电脑或部署到线上域名后即为全新配置。
 
 ---
 
@@ -138,7 +165,7 @@ GitHub → Settings → Developer settings → **Fine-grained tokens** → Conte
 │   ├── watch-meta.js         观影/读书统计
 │   ├── days-YYYY.js          观影天索引（按年拆，自动重算）
 │   ├── tmdb.js               影视搜索用的公开 key
-│   └── admin-lock.js         后台口令哈希
+│   └── admin-lock.js         后台访问口令（明文，默认 admin123，上线必改）
 │
 ├── functions/data/[[path]].js  数据输出层：优先 D1，没有就回退静态文件
 ├── tools/gen-import.mjs        生成 data-import.json（Tier2 一次性迁移用）

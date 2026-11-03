@@ -68,6 +68,14 @@ Cloudflare 控制台 → **Workers & Pages** → **Create** → **Pages** → **
 2. 打开 `https://<项目名>.pages.dev/admin.html`
 3. 「设置」页填：GitHub 用户名 / 仓库名 / 分支（`main`）/ Token → 保存 → 点 **测试连接**
 
+> **后台口令**：进入后台先输访问口令——模板默认 `admin123`（无账号概念，单口令，
+> 定义在 `data/admin-lock.js`）。它明文随仓库公开，只是挡闲人的前端门锁；**上线后
+> 第一件事改掉它**：编辑该文件 `pass` 字段 → 提交推送即可。真正拦住恶意改动的是
+> GitHub Token 权限，口令不是安全边界。
+> **设置页字段**：模板默认值为空（占位符 `your-username` / `your-repo`）。值保存在
+> 浏览器 localStorage——用 `file://` 本地打开 admin.html 时会与其他本地页面共享存储，
+> 可能显示你其他站点的旧配置；部署到线上域名后就是独立干净的。
+
 **5）试着发一篇**
 
 admin.html → 发文章 → 写标题和正文 → 发布。约 1 分钟后仓库多一个 commit，站点自动更新。
