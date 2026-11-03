@@ -18,7 +18,7 @@
 
 /* ⚠️ 每次改本文件都必须更新 BUILD，并在部署后用 https://<域名>/version 核对线上版本。
    没有这一行，部署完就只能靠猜——CF 控制台不显示代码版本。 */
-const BUILD = '20261103-1000';
+const BUILD = '20261103-1200';
 
 /* ===== 站点规格（单站）：数据语义差异唯一登记处 =====
  * 数据路径 / 暂存标记 / 库名只允许改这里；
@@ -2293,10 +2293,11 @@ async function flush(env, manual, opts) {
 
   /* ★★★适配点1（续）★★★ 这里是要写回仓库的文件路径（相对仓库根）。 */
 
-  /* 主站文章（C 方案）：列表只存标题摘要（小文件整写无所谓），正文一篇一个新 blob，写完不再动 */
-  if (files.posts) {
-    const listText = await srcText('data/posts.js');
-    const arr = parseArr(listText);
+  /* 主站文章（C 方案）：列表只存标题摘要（小文件整写无所谓），正文一篇一个新 blob，写完不再动。
+     ★ 新增与删除/置顶必须合并处理（读一次写一次）：分两个分支各自读发布前快照再各自写回，
+     同批「文 + 顶/删」时后写覆盖前写，本批新文章被旧快照覆盖丢失（2026-11-03 审计发现）。 */
+  if (files.posts || files.pdel || files.pin) {
+    const arr = parseArr(await srcText('data/posts.js'));
     const slugs = new Set(arr.map((p) => p.slug));
     /* 保持顶：插到原第 1 条之后（第 0 位不动）；否则照旧插最前。
        多个新增都插同一位置 → 后发的仍在前，与 unshift 顺序一致 */
@@ -2315,6 +2316,18 @@ async function flush(env, manual, opts) {
       slugs.add(list.slug);
       arr.splice(at, 0, list);
       await put(contentPath(list.slug), mainContentFile(list.slug, raw === undefined ? { content } : { content, raw }));
+    }
+    for (const op of pending.filter((o) => o.file === 'pdel')) {
+      const i = arr.findIndex((p) => p.slug === op.item.slug);
+      if (i < 0) throw new Error('文章不存在（可能刚删过）：' + op.item.slug);
+      if (op.item.title && arr[i].title !== op.item.title) throw new Error('文章定位校验失败，请重新「查」再删');
+      arr.splice(i, 1);
+      await put(contentPath(op.item.slug), null);
+    }
+    for (const op of pending.filter((o) => o.file === 'pin')) {
+      const i = arr.findIndex((p) => p.slug === op.item.slug);
+      if (i < 0) throw new Error('文章不存在（可能刚删过）：' + op.item.slug);
+      if (i > 0) arr.unshift(arr.splice(i, 1)[0]);
     }
     await put('data/posts.js', HEADERS.posts + JSON.stringify(arr) + '\n');
   }
@@ -2377,23 +2390,7 @@ async function flush(env, manual, opts) {
     await put('data/todos.js', HEADERS.todos + JSON.stringify(arr) + ';\n');
   }
 
-  /* 主站文章删除/置顶：列表去除 + 正文文件删除（tree sha:null）；置顶 = 移到数组最前（列表按数组顺序渲染） */
-  if (files.pdel || files.pin) {
-    const arr = parseArr(await srcText('data/posts.js'));
-    for (const op of pending.filter((o) => o.file === 'pdel')) {
-      const i = arr.findIndex((p) => p.slug === op.item.slug);
-      if (i < 0) throw new Error('文章不存在（可能刚删过）：' + op.item.slug);
-      if (op.item.title && arr[i].title !== op.item.title) throw new Error('文章定位校验失败，请重新「查」再删');
-      arr.splice(i, 1);
-      await put(contentPath(op.item.slug), null);
-    }
-    for (const op of pending.filter((o) => o.file === 'pin')) {
-      const i = arr.findIndex((p) => p.slug === op.item.slug);
-      if (i < 0) throw new Error('文章不存在（可能刚删过）：' + op.item.slug);
-      if (i > 0) arr.unshift(arr.splice(i, 1)[0]);
-    }
-    await put('data/posts.js', HEADERS.posts + JSON.stringify(arr) + '\n');
-  }
+  /* 主站文章删除/置顶已合并进上方 posts 分支（同读同写，防同批覆盖） */
 
   /* 主站文章改正文：只重写该篇正文文件（列表/摘要/封面不动） */
   if (files.pedit) {

@@ -1247,6 +1247,43 @@ await check('保持顶：确认顶 → 新文章排在原第 1 篇之后', async
   });
 });
 
+/* 回归（2026-11-03 审计 B1）：同批「发文 + 置顶/删文」。
+   posts 分支与 pdel/pin 分支曾各自读发布前快照再各自写回 data/posts.js，
+   后写覆盖前写 → 本批新文章丢失。现合并为一个分支读一次写一次。 */
+await check('同批发文+置顶：新文章不被旧快照覆盖', async () => {
+  const posts = [
+    { slug: 'a1', title: '文章一', date: '2026-10-01', excerpt: '' },
+    { slug: 'a2', title: '文章二', date: '2026-09-01', excerpt: '' },
+    { slug: 'a3', title: '文章三', date: '2026-08-01', excerpt: '' },
+  ];
+  const readPosts = (t) => JSON.parse(t.slice(t.indexOf('['), t.lastIndexOf(']') + 1));
+  await withMock({ 'data/posts.js': '// 文章\nwindow.POSTS = ' + JSON.stringify(posts) + ';\n' }, {}, async (puts, deleted) => {
+    await env.KV.put('pending', '[]');
+    await sendText('文\n文章五\n正文', 'nrb1', 1700000320, 'm-rb1');
+    const rp = await sendText('顶 文章二', 'nrb2', 1700000321, 'm-rb2');
+    if (!rp.includes('暂存')) throw new Error('顶唯一命中应直达暂存: ' + rp);
+    await sendText('发', 'nrb3', 1700000322, 'm-rb3');
+    const reply = await sendText('确认', 'nrb4', 1700000323, 'm-rb4');
+    const res = JSON.parse(await env.KV.get('pubres:userid-abc') || 'null');
+    if (!res || !res.ok || res.n !== 2) throw new Error('应成功发布2条: ' + reply + ' | ' + JSON.stringify(res));
+    const titles = readPosts(puts['data/posts.js']).map((p) => p.title).join(',');
+    if (titles !== '文章二,文章五,文章一,文章三') throw new Error('应含新文章且置顶最前: ' + titles);
+    if (!puts['data/content/文章五.js']) throw new Error('新文章正文文件应写入');
+
+    /* 同批 文+删：删除发生在合并后的数组上，新文章不受影响 */
+    await env.KV.put('pending', '[]');
+    await sendText('文\n文章六\n正文', 'nrb5', 1700000324, 'm-rb5');
+    await sendText('删 文章三', 'nrb6', 1700000325, 'm-rb6');
+    await sendText('发', 'nrb7', 1700000326, 'm-rb7');
+    const reply2 = await sendText('确认', 'nrb8', 1700000327, 'm-rb8');
+    const res2 = JSON.parse(await env.KV.get('pubres:userid-abc') || 'null');
+    if (!res2 || !res2.ok || res2.n !== 2) throw new Error('应成功发布2条: ' + reply2 + ' | ' + JSON.stringify(res2));
+    const titles2 = readPosts(puts['data/posts.js']).map((p) => p.title).join(',');
+    if (titles2 !== '文章六,文章一,文章二') throw new Error('应含新文章且删掉旧文: ' + titles2);
+    if (!deleted.includes('data/content/a3.js')) throw new Error('被删文章正文应删除: ' + JSON.stringify(deleted));
+  });
+});
+
 await check('保持顶：图片新增排到原第 1 张之后', async () => {
   const photos = [
     { src: 'https://img.example.com/file/P1', note: '', date: '2026-10-30' },
