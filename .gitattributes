@@ -1,0 +1,9 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# git 钩子与 shell 脚本必须是 LF，否则 Windows 下会报 "bad interpreter"
+scripts/git-hooks/* text eol=lf
+*.sh text eol=lf
+
+# bat 必须 CRLF，否则 cmd 解析出错
+*.bat text eol=crlf

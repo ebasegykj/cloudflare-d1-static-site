@@ -1,0 +1,130 @@
+/* ============ 管理后台样式 ============ */
+.admin-main { padding: 26px 0 60px; }
+.admin-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+.admin-tabs .tab {
+  border: 1px solid var(--line); background: var(--bg-card); color: var(--text-sub);
+  padding: 8px 18px; border-radius: 10px; cursor: pointer; font-size: 14px;
+}
+.admin-tabs .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+.admin-back { margin-left: auto; color: var(--text-sub); font-size: 13.5px; }
+.admin-back:hover { color: var(--accent); }
+
+.form-card {
+  background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 22px 24px; box-shadow: var(--shadow); margin-bottom: 16px;
+}
+.form-card h2 { margin: 0 0 4px; font-size: 17px; }
+.form-card .sub { color: var(--text-sub); font-size: 12.5px; margin: 0 0 16px; }
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 13px; color: var(--text-sub); margin-bottom: 5px; }
+.field input, .field textarea {
+  width: 100%; border: 1px solid var(--line); border-radius: 10px;
+  background: var(--bg); color: var(--text); padding: 10px 12px; font-size: 14px;
+  font-family: inherit; outline: none; transition: border-color .15s;
+}
+.field input:focus, .field textarea:focus { border-color: var(--accent); }
+.field textarea { resize: vertical; min-height: 110px; line-height: 1.7; }
+.field textarea.md { font-family: "Cascadia Code", Consolas, monospace; font-size: 13px; min-height: 260px; }
+.field .tip { font-size: 12px; color: var(--text-sub); margin-top: 4px; }
+.row2 { display: flex; gap: 12px; }
+.row2 .field { flex: 1; }
+.btn {
+  border: none; background: var(--accent); color: #fff; font-size: 14.5px; font-weight: 600;
+  padding: 10px 26px; border-radius: 10px; cursor: pointer; transition: opacity .15s, transform .15s;
+}
+.btn:hover { opacity: .9; transform: translateY(-1px); }
+.btn:disabled { opacity: .5; cursor: wait; transform: none; }
+.btn.ghost { background: var(--bg-soft); color: var(--text); border: 1px solid var(--line); font-weight: 400; }
+.btn.danger { background: #c2544a; }
+.status-line { font-size: 13px; color: var(--text-sub); margin-top: 10px; min-height: 18px; }
+.status-line.ok { color: var(--accent); }
+.status-line.err { color: #c2544a; }
+
+.mgmt-item {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  border: 1px solid var(--line); border-radius: 10px; margin-bottom: 8px; background: var(--bg-card);
+}
+.mgmt-item .mi-date { font-size: 12px; color: var(--text-sub); white-space: nowrap; }
+.mgmt-item .mi-text { flex: 1; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mgmt-item .btn { padding: 5px 12px; font-size: 12.5px; }
+
+.toast {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+  background: #2b2a26; color: #fff; padding: 11px 22px; border-radius: 12px;
+  font-size: 13.5px; box-shadow: 0 8px 30px rgba(0,0,0,.25); z-index: 200; max-width: 80vw;
+}
+html[data-theme="dark"] .toast { background: #e8e6e1; color: #17181a; }
+.toast.ok { outline: 2px solid var(--accent); }
+.toast.err { outline: 2px solid #c2544a; }
+
+/* ---------- 访问密码锁屏 ---------- */
+.lock-screen {
+  position: fixed; inset: 0; z-index: 999;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(10px);
+  display: grid; place-items: center; padding: 20px;
+}
+.lock-card {
+  width: 100%; max-width: 340px; text-align: center;
+  background: var(--bg-card); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: 0 18px 60px rgba(0,0,0,.18);
+  padding: 32px 26px 24px;
+}
+.lock-card .lock-icon { font-size: 30px; line-height: 1; margin-bottom: 12px; }
+.lock-card h2 { margin: 0 0 6px; font-size: 18px; }
+.lock-card .lock-sub { margin: 0 0 18px; font-size: 13px; color: var(--text-sub); }
+.lock-card input {
+  width: 100%; border: 1px solid var(--line); border-radius: 10px;
+  background: var(--bg); color: var(--text); padding: 11px 14px;
+  font-size: 15px; text-align: center; letter-spacing: 2px; outline: none;
+}
+.lock-card input:focus { border-color: var(--accent); }
+.lock-card .btn { width: 100%; margin-top: 12px; }
+.lock-err { min-height: 18px; margin: 10px 0 0; font-size: 12.5px; color: #c2544a; }
+.lock-tip { margin: 14px 0 0; font-size: 11.5px; color: var(--text-sub); line-height: 1.6; }
+.lock-tip code { background: var(--bg-soft); padding: 1px 5px; border-radius: 4px; }
+
+/* 修复：元素带 hidden 属性时必须真正隐藏（否则 display 类样式会覆盖它） */
+[hidden] { display: none !important; }
+
+/* 管理列表图片缩略图 */
+.mgmt-thumb {
+  width: 64px; height: 64px; object-fit: cover;
+  border-radius: 8px; border: 1px solid var(--line);
+  flex-shrink: 0; background: var(--bg-soft);
+}
+.mgmt-item { align-items: center; }
+
+/* ---------- 类型分段选择 ---------- */
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.seg button {
+  border: none; background: var(--bg); color: var(--text-sub);
+  padding: 8px 16px; font-size: 13.5px; cursor: pointer; border-right: 1px solid var(--line);
+}
+.seg button:last-child { border-right: none; }
+.seg button.on { background: var(--accent); color: #fff; }
+#m-results .mgmt-item { cursor: pointer; }
+#m-results .mgmt-item:hover { background: var(--bg-soft); }
+
+/* ---------- 暂存发布条 ---------- */
+#stage-bar {
+  position: fixed; right: 20px; bottom: 20px; z-index: 90;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: var(--bg-card); border: 1px solid var(--line); border-radius: 14px;
+  box-shadow: 0 8px 30px rgba(40,38,32,.18); padding: 10px 14px; max-width: calc(100vw - 40px);
+}
+#stage-bar .sb-count { font-size: 13px; color: var(--text); font-weight: 600; }
+#stage-bar button {
+  border: none; border-radius: 9px; padding: 7px 14px; font-size: 13px; cursor: pointer;
+  background: var(--accent); color: #fff;
+}
+#stage-bar button.sb-clear { background: none; color: var(--text-sub); border: 1px solid var(--line); }
+#stage-bar .status-line { flex-basis: 100%; margin: 0; }
+@media (max-width: 560px) {
+  #stage-bar { left: 12px; right: 12px; bottom: 12px; justify-content: space-between; }
+  #stage-bar .status-line { font-size: 12px; }
+}
+
+/* ---------- 暂存流程提示 ---------- */
+.stage-hint { font-size: 12px; color: var(--text-sub); margin: 8px 0 0; }
+#stage-bar button:disabled { opacity: .45; cursor: not-allowed; }

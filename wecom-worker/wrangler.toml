@@ -1,0 +1,17 @@
+name = "your-bot"
+main = "worker.js"
+compatibility_date = "2024-09-01"
+
+# 每 5 分钟自动把暂存的消息合并成一次提交发布（也可在微信里发「发」立即发布）
+[triggers]
+crons = ["*/5 * * * *"]
+
+# KV 命名空间：先在 dashboard 创建（Workers & Pages → KV → 创建 your-bot-kv），
+# 然后把下面的 id 换成它的 ID。如果走 dashboard 粘贴部署，则在 Worker 设置里手动绑定变量名 KV。
+[[kv_namespaces]]
+binding = "KV"
+id = "PASTE_KV_ID_HERE"
+
+# 机密信息不放这里，全部放在一个名为 CONFIG 的变量/机密里（JSON 字符串），见 README 注释
+# [vars]
+# CONFIG = '{"CORP_ID":"...","AGENT_ID":"...","CORP_SECRET":"...","WECOM_TOKEN":"...","WECOM_AESKEY":"...","GH_TOKEN":"...","TMDB_KEY":"...","IMG_TOKEN":"...","REPO":"your-name/your-repo"}'

@@ -1,0 +1,8 @@
+先读 AGENTS.md，遵守以下硬规则：
+
+1. 本仓库根目录就是线上站点，push 到 main = 立刻上生产。
+2. data/ 下所有 *.js 是运行时数据，由微信 bot 和 admin.html 通过 GitHub API 写入。
+   禁止手改、禁止 git add data/、禁止 git add -A / git add . / git commit -a。
+3. 动手前必须 git fetch && git pull --rebase origin main。
+4. 提交时逐个 add 你实际改动的代码文件。
+5. 提交信息用中文，说清改了哪个页面/功能。

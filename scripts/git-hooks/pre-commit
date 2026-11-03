@@ -1,0 +1,40 @@
+#!/bin/sh
+# 提交前检查：数据文件不许进提交；本地不许落后远端。
+# 例外：ALLOW_DATA_COMMIT=1 git commit ...
+# 由 scripts/install-hooks.sh 启用（core.hooksPath）。
+
+red() { printf '\n\033[31m[pre-commit] %s\033[0m\n' "$1"; }
+
+# ---------- 1. 数据文件 ----------
+DATA=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^data/[^/]+\.js$')
+if [ -n "$DATA" ] && [ "${ALLOW_DATA_COMMIT:-0}" != "1" ]; then
+  red "拒绝提交：暂存区里有数据文件"
+  echo "$DATA" | sed 's/^/    /'
+  echo ""
+  echo "  这些文件由微信 bot / admin.html 直接写 GitHub，本地那份只是 pull 下来的副本。"
+  echo "  提交它们 = 把线上刚发布的文章覆盖成几天前的样子。"
+  echo ""
+  echo "  撤销暂存：  git restore --staged <文件>"
+  echo "  确实需要：  ALLOW_DATA_COMMIT=1 git commit ..."
+  exit 1
+fi
+
+# ---------- 2. 是否落后远端 ----------
+git rev-parse --verify -q origin/main >/dev/null 2>&1 || exit 0
+
+if ! git fetch --quiet origin main 2>/dev/null; then
+  echo "[pre-commit] 提示：fetch 失败（可能离线），远端检查用的是上次的记录"
+fi
+
+BEHIND=$(git rev-list --count HEAD..origin/main 2>/dev/null || echo 0)
+if [ "$BEHIND" -gt 0 ]; then
+  red "拒绝提交：本地落后 origin/main $BEHIND 个提交"
+  echo "  先拉取最新，再动手："
+  echo "      git pull --rebase origin main"
+  echo ""
+  echo "  这个仓库的 main 有微信 bot 和在线后台在同时写，"
+  echo "  落后状态下提交/推送，很容易把别人的新内容盖掉。"
+  exit 1
+fi
+
+exit 0

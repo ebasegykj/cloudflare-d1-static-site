@@ -1,0 +1,99 @@
+name: 数据保护（服务端兜底）
+
+# 本地 git 钩子只能防「装了钩子的人」。这一层跑在 GitHub 服务器上，
+# 不依赖任何人配合：网页直接提交、没装钩子、甚至用了 --no-verify，都拦得住。
+#
+# 规则：一次提交如果同时改了「代码」和「数据」，几乎必然是 git add -A 造成的误操作。
+#       bot 和 admin 只改数据、不改代码，所以不会误伤它们。
+# 处置：只把数据文件还原到这次提交之前，代码改动原样保留。
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 检测「代码+数据」混合提交并还原数据
+        run: |
+          set -u
+          BEFORE="${{ github.event.before }}"
+          NOW="$GITHUB_SHA"
+
+          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            echo "首次推送，跳过检查"
+            exit 0
+          fi
+
+          # 必须关掉路径引号：默认 quotepath=true 会把含中文的路径写成
+          #   "data/content/\346\265\213...js"
+          # 开头是引号，导致下面 ^data/ 匹配不上 → 数据被误判成「代码」→
+          # bot 发一篇中文标题文章就被判定为「代码+数据混合」而整份回滚。
+          # 2026-10-31 事故即此（中文标题文章发布后 10 秒被撤回）。
+          git config core.quotepath false
+
+          CHANGED=$(git diff --name-only "$BEFORE" "$NOW")
+          echo "本次改动文件："
+          echo "$CHANGED"
+
+          # 数据 = data/ 下所有 .js（含 data/content/<slug>.js，正文也是数据）
+          # 判定单位是【单个 commit】而不是整个 push 区间：
+          # 一次 push 可以同时含「纯数据提交」和「纯代码提交」（例如文档 + 数据清理），
+          # 按区间总 diff 判会把这种合法 push 误判成混合提交而回滚数据。
+          # 2026-11-02 事故：一次"纯数据删孤儿"提交与一次"纯文档"提交同一 push，
+          # 区间被判混合 → 孤儿文件被整体恢复。故逐 commit 检查。
+          MIXED=0
+          MIXED_FILES=/tmp/mixed_data_files.txt
+          : > "$MIXED_FILES"
+          for C in $(git rev-list "$BEFORE".."$NOW"); do
+            CD=$(git diff-tree --no-commit-id --name-only -r "$C" | grep -E '^data/.+\.js$' || true)
+            CX=$(git diff-tree --no-commit-id --name-only -r "$C" | grep -vE '^data/' || true)
+            if [ -n "$CD" ] && [ -n "$CX" ]; then
+              echo "::warning::提交 $(git rev-parse --short "$C") 混合了代码与数据，数据文件将被还原"
+              echo "$CD" >> "$MIXED_FILES"
+              MIXED=1
+            fi
+          done
+
+          if [ "$MIXED" -eq 0 ]; then
+            echo "✓ 没发现「代码+数据」混合提交，放行"
+            exit 0
+          fi
+
+          echo "涉及的数据文件："
+          cat "$MIXED_FILES"
+
+          # 竞态保护：若远端已经前进，说明这段时间又有新提交（比如 bot 刚发了文章），
+          # 此时自动修复可能抹掉更新的内容，改为只报警不动手。
+          git fetch -q origin main
+          REMOTE=$(git rev-parse origin/main)
+          if [ "$REMOTE" != "$NOW" ]; then
+            echo "::error::远端已前进到 $REMOTE，放弃自动修复（避免覆盖更新的内容）——请人工处理"
+            exit 0
+          fi
+
+          git config user.name "data-guard"
+          git config user.email "data-guard@users.noreply.github.com"
+
+          # 只还原「混合提交」触碰过的数据文件，还原到本次 push 之前的版本
+          while IFS= read -r f; do
+            [ -n "$f" ] && git checkout "$BEFORE" -- "$f"
+          done < "$MIXED_FILES"
+
+          if git diff --cached --quiet; then
+            echo "数据文件与覆盖前一致，无需修复"
+            exit 0
+          fi
+
+          git commit -m "自动修复：撤回 ${NOW:0:7} 里被覆盖的数据文件（代码改动保留）"
+          git push origin HEAD:main
+
+          echo "::warning::已把数据文件还原到覆盖前版本，代码改动保留"

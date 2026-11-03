@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的小站 · 一个开源静态博客模板</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🪴</text></svg>">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="#/">
+      <span class="brand-avatar" id="brand-avatar">我</span>
+      <span class="brand-text">
+        <strong id="site-title">我的小站</strong>
+        <small id="site-subtitle">一个开源静态博客模板</small>
+      </span>
+    </a>
+    <nav class="site-nav" id="nav">
+      <a href="#/" data-tab="posts">文章</a>
+      <a href="#/moments" data-tab="moments">瞬间</a>
+      <a href="#/todos" data-tab="todos">待办</a>
+      <a href="#/watch" data-tab="watch">观影图鉴</a>
+      <a href="#/gallery" data-tab="gallery">图片墙</a>
+      <a href="#/links" data-tab="links">朋友圈</a>
+    </nav>
+    <button class="icon-btn" id="theme-toggle" title="切换深浅色" aria-label="切换深浅色">🌙</button>
+  </div>
+</header>
+
+<main class="wrap" id="app"></main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p><span id="footer-text"></span> · <a href="admin.html">管理</a></p>
+  </div>
+</footer>
+
+<button class="backtop" id="backtop" title="返回顶部" aria-label="返回顶部">↑</button>
+<div class="lightbox" id="lightbox" hidden>
+  <button class="lightbox-close" id="lightbox-close" aria-label="关闭">×</button>
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<script src="data/meta.js"></script>
+<script src="data/watch-meta.js"></script>
+<script src="data/posts.js"></script>
+<script src="data/links.js"></script>
+<script src="data/photos.js"></script>
+<script src="assets/app.js?v=20261031c"></script>
+</body>
+</html>

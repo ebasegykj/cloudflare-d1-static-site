@@ -1,0 +1,2 @@
+# Cloudflare Pages 重定向规则：把含敏感说明的文档挡在站外
+/DEPLOY.md    /

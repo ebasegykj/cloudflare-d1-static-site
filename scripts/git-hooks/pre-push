@@ -1,0 +1,40 @@
+#!/bin/sh
+# push 前最后一道：不落后远端、不带数据文件。
+# 即使有人用 --no-verify 跳过 pre-commit，这一关仍然生效（pre-push 需要单独 --no-verify）。
+
+red() { printf '\n\033[31m[pre-push] %s\033[0m\n' "$1"; }
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$remote_ref" in
+    refs/heads/main) ;;
+    *) continue ;;
+  esac
+
+  git fetch --quiet origin main 2>/dev/null
+
+  # ---------- 1. 落后远端 ----------
+  BEHIND=$(git rev-list --count "$local_sha"..origin/main 2>/dev/null || echo 0)
+  if [ "$BEHIND" -gt 0 ]; then
+    red "拒绝推送：远端 main 有 $BEHIND 个你没有的提交"
+    echo "  先同步再推："
+    echo "      git pull --rebase origin main"
+    echo "      git push origin main"
+    echo ""
+    echo "  直接推会被 GitHub 拒绝（non-fast-forward）；"
+    echo "  force push 则会抹掉 bot / 后台刚发布的文章，绝不要用。"
+    exit 1
+  fi
+
+  # ---------- 2. 本次推送是否碰了数据文件 ----------
+  DATA=$(git diff --name-only origin/main.."$local_sha" -- data/ 2>/dev/null)
+  if [ -n "$DATA" ] && [ "${ALLOW_DATA_COMMIT:-0}" != "1" ]; then
+    red "拒绝推送：这次要推的提交里改了数据文件"
+    echo "$DATA" | sed 's/^/    /'
+    echo ""
+    echo "  数据只应由微信 bot / admin.html 通过 GitHub API 写入。"
+    echo "  确认无误后重推：  ALLOW_DATA_COMMIT=1 git push origin main"
+    exit 1
+  fi
+done
+
+exit 0

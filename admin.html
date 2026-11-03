@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>管理后台 · 我的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔑</text></svg>">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/admin.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="index.html">
+      <span class="brand-avatar">🔑</span>
+      <span class="brand-text"><strong>管理后台</strong><small>内容发布 → GitHub → 自动部署</small></span>
+    </a>
+    <a class="admin-back" href="index.html">← 回到站点</a>
+  </div>
+</header>
+
+<main class="wrap admin-main" id="admin-app">
+  <div class="admin-tabs">
+    <button class="tab active" data-tab="moment">发瞬间</button>
+    <button class="tab" data-tab="post">发文章</button>
+    <button class="tab" data-tab="photo">加图片</button>
+    <button class="tab" data-tab="links">朋友圈</button>
+    <button class="tab" data-tab="todos">待办清单</button>
+    <button class="tab" data-tab="manage">管理</button>
+    <button class="tab" data-tab="settings">设置</button>
+  </div>
+  <p class="stage-hint">改动点「保存」先攒进暂存区（右下角浮条），攒多点一次「发布到线上」→ 合并成 1 个提交、只部署 1 次</p>
+  <div id="panel"></div>
+  <div id="toast" class="toast" hidden></div>
+</main>
+
+<div class="lock-screen" id="lock-screen" hidden>
+  <div class="lock-card">
+    <div class="lock-icon">🔒</div>
+    <h2>管理后台</h2>
+    <p class="lock-sub">请输入访问密码</p>
+    <input id="lock-pass" type="password" placeholder="密码" autocomplete="current-password">
+    <button class="btn" id="lock-btn">进入后台</button>
+    <p class="lock-err" id="lock-err"></p>
+    <p class="lock-tip">忘记密码：改仓库里 <code>data/admin-lock.js</code> 的 hash</p>
+  </div>
+</div>
+
+<script src="data/meta.js"></script>
+<script src="data/posts.js"></script>
+<script src="data/moments.js"></script>
+<script src="data/links.js"></script>
+<script src="data/photos.js"></script>
+<script src="data/tmdb.js"></script>
+<script src="data/admin-lock.js"></script>
+<script src="assets/admin.js?v=20261102a"></script>
+</body>
+</html>
